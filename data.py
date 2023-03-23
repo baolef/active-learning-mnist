@@ -15,26 +15,34 @@ class Dataset:
         if scale:
             X=scaler.fit_transform(X)
         train_size=int(train_ratio*len(X))
-
+        self.X=X
+        self.y=y
         self.n_features = X.shape[1]
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
             X, y, train_size=train_size, test_size=len(X)-train_size
         )
 
+    def pca(self, n_components):
+        pca=PCA(n_components)
+        pca.fit(self.X)
+        return pca
+
     def get_train(self,n_features=0):
         if 0<n_features<self.n_features:
-            pca=PCA(n_components=n_features)
-            return pca.fit_transform(self.X_train), self.y_train
+            pca=self.pca(n_features)
+            return pca.transform(self.X_train), self.y_train
         return self.X_train, self.y_train
 
     def get_test(self,n_features=0):
         if 0<n_features<self.n_features:
-            pca=PCA(n_components=n_features)
+            pca=self.pca(n_features)
             return pca.fit_transform(self.X_test), self.y_test
         return self.X_test, self.y_test
 
 
 if __name__ == '__main__':
     dataset=Dataset()
-    X,y=dataset.get_train()
-    X,y=dataset.get_test()
+    X, y = dataset.get_train()
+    X, y = dataset.get_test()
+    X,y=dataset.get_train(2)
+    X,y=dataset.get_test(3)
