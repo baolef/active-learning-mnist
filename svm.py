@@ -1,6 +1,5 @@
 # Created by Yuan Chen on 03/26/2023
 
-import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.svm import SVC
 import data
@@ -79,17 +78,10 @@ class SVM:
         plt.show()
 
 
-
 if __name__ == '__main__':
     dataset = data.Dataset()
-    X_test, y_test = dataset.get_test(20)
-    X_train, y_train = dataset.get_train(20)
+    X_test, y_test = dataset.get_test()
+    X_train, y_train = dataset.get_train()
 
     classifier = SVM(X_train, X_test, y_train, y_test, 1, 'poly')
     classifier.visualize_prediction()
-
-
-
-
-
-
