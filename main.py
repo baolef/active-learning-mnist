@@ -7,6 +7,8 @@ import numpy as np
 from sklearn.svm import SVC
 from sklearn.utils import shuffle
 from modAL.models import ActiveLearner
+from modAL.models.base import BaseEstimator
+import os
 
 
 def uncertainty_sampling(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1) -> tuple[np.ndarray, np.ndarray]:
@@ -113,9 +115,8 @@ if __name__ == '__main__':
     dataset = Dataset()
     dataset.plot('data.png')
 
-    pipeline(dataset, SVC(probability=True), random_sampling, 'passive', 10, 90, 1, 1)
-    pipeline(dataset, SVC(probability=True), uncertainty_sampling, 'uncertainty', 10, 90, 1, 1)
+    pipeline(dataset, SVC(probability=True), random_sampling, 'passive', 10, 90, 1, 2)
+    pipeline(dataset, SVC(probability=True), uncertainty_sampling, 'uncertainty', 10, 90, 1, 2)
 
-    plt.savefig('mnist.png')
+    plt.savefig('result.png')
     plt.close()
-
