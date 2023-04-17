@@ -18,12 +18,30 @@ def uncertainty_sampling(classifier: ActiveLearner, X_pool: np.ndarray, n: int =
     :param classifier: The classifier for which the labels are to be queried.
     :param X_pool: The sample pool.
     :param n: The number of queries.
-    :return: n random samples indexes and n random samples.
+    :return: n indices from samples maximizing uncertainty and the n samples.
     """
     uncertainty = 1 - np.max(classifier.predict_proba(X_pool), axis=1)
     idx = np.argsort(uncertainty)[-n:]
     return idx, X_pool[idx]
 
+def density_sampling(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1, beta: float = 1.0) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Samples n samples with the largest product of uncertainty-based utility and average similarity to other samples in X_pool, returning their indices and values.
+    :param classifier: The classifier for which the labels are to be queried.
+    :param X_pool: The sample pool.
+    :param n: The number of queries.
+    :param beta: Hyperparameter exponentiating the average similarity term of the metric.
+    :return: n indices from samples maximizing the density-based metric and the n samples.
+    """
+    uncertainty = 1 - np.max(classifier.predict_proba(X_pool), axis=1)
+    num_points = len(X_pool)
+    avg_similarity = np.zeros(num_points)
+    for i in range(num_points):
+        dists = np.linalg.norm(np.delete(X_pool, i, 0) - X_pool[i], axis=1) # list of Euclidean distances between i-th sample and all others in pool
+        avg_similarity[i] = np.mean(1.0 / (1.0 + dists)) # 1 / (1 + d) converts distance measure to similarity measure with maximum of 1
+    idx = np.argsort(uncertainty * (avg_similarity ** beta))[-n:]
+    return idx, X_pool[idx]
+    
 
 def random_sampling(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1) -> tuple[np.ndarray, np.ndarray]:
     """
