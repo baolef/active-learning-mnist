@@ -8,7 +8,7 @@ from sklearn.svm import SVC
 from sklearn.utils import shuffle
 from modAL.models import ActiveLearner
 from modAL.models.base import BaseEstimator
-import os
+from tqdm import tqdm
 
 
 def uncertainty_sampling(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1) -> tuple[np.ndarray, np.ndarray]:
@@ -61,7 +61,7 @@ def learning(train_x: np.ndarray, train_y: np.ndarray, test_x: np.ndarray, test_
     train_y = train_y[base:]
     accuracy.append(learner.score(test_x, test_y))
 
-    for _ in range(samples // batch):
+    for _ in tqdm(range(samples // batch)):
         i, x = learner.query(train_x, n=batch)
         learner.teach(x, train_y[i])
         train_x = np.delete(train_x, i, axis=0)
@@ -103,7 +103,8 @@ def pipeline(dataset: Dataset, model: BaseEstimator, query: Callable, label: str
     np.random.seed(2023)
     acc = []
     train_x, test_x, train_y, test_y = dataset.get()
-    for _ in range(n):
+    for i in range(n):
+        print('{}: round {}'.format(label,i+1))
         train_x, train_y = shuffle(train_x, train_y)
         accuracy = learning(train_x, train_y, test_x, test_y, model, query, base, samples, batch)
         acc.append(accuracy)
