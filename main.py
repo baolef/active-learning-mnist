@@ -24,34 +24,22 @@ def minimize_expected_risk(classifier: ActiveLearner, X_pool: np.ndarray, n: int
     """
     proc_pool = mp.Pool()
 
-    print("Initialised pool")
-
     base_model = classifier.estimator
     n_classes = len(np.unique(classifier.y_training))
     X_u_prob = base_model.predict_proba(X_pool)
-    X_pool_cp = np.copy(X_pool)
     tmp_model = deepcopy(classifier.estimator)
 
-
-    print(len(X_pool))
-
-    start = timeit.default_timer()
-    print(start)
-
     def inner_pool_helper(i:int) -> float:
-        start = timeit.default_timer()
+        
         loss = 0
         for label in range(n_classes):
-            tmp_x = np.append(classifier.X_training, [X_pool_cp[i,:]], axis = 0)
+            tmp_x = np.append(classifier.X_training, [X_pool[i,:]], axis = 0)
             tmp_y = np.append(classifier.y_training, [str(label)], axis = 0)
             tmp_model.fit(tmp_x, tmp_y)
 
-            probs = tmp_model.predict_proba(X_pool_cp)
+            probs = tmp_model.predict_proba(X_pool)
             prob_entropy = sp.stats.entropy(probs.T)
             loss += np.sum(prob_entropy) * X_u_prob[i,label]
-        
-        stop = timeit.default_timer()
-        print('Time taken in seconds =',stop-start)
         
         return loss
     
@@ -59,7 +47,6 @@ def minimize_expected_risk(classifier: ActiveLearner, X_pool: np.ndarray, n: int
     proc_pool.close()
     proc_pool.join()
 
-    
 
     if n == 1:
         idx = np.argmin(expected_risk)
