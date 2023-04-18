@@ -9,12 +9,12 @@ from sklearn.cluster import KMeans
 from sklearn.utils import shuffle
 from modAL.models import ActiveLearner
 from modAL.models.base import BaseEstimator
-<<<<<<< HEAD
 import os
 import multiprocess as mp
 from copy import deepcopy
 import scipy as sp
 import timeit
+from tqdm import tqdm
 
 def minimize_expected_risk(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1) -> tuple[np.ndarray, np.ndarray]:
     """
@@ -58,9 +58,7 @@ def minimize_expected_risk(classifier: ActiveLearner, X_pool: np.ndarray, n: int
         return idx. X_pool[idx]
 
 
-=======
-from tqdm import tqdm
->>>>>>> main
+
 
 
 def uncertainty_sampling(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1) -> tuple[np.ndarray, np.ndarray]:
