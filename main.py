@@ -9,7 +9,58 @@ from sklearn.cluster import KMeans
 from sklearn.utils import shuffle
 from modAL.models import ActiveLearner
 from modAL.models.base import BaseEstimator
+<<<<<<< HEAD
+import os
+import multiprocess as mp
+from copy import deepcopy
+import scipy as sp
+import timeit
+
+def minimize_expected_risk(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Greedily samples n samples that minimize the expected risk from X_pool and return their indexes and values.
+    :param classifier: The classifier for which the labels are to be queried.
+    :param X_pool: The sample pool.
+    :param n: The number of queries.
+    :return: n random samples indexes and n random samples.
+    """
+    proc_pool = mp.Pool()
+
+    base_model = classifier.estimator
+    n_classes = len(np.unique(classifier.y_training))
+    X_u_prob = base_model.predict_proba(X_pool)
+    tmp_model = deepcopy(classifier.estimator)
+
+    def inner_pool_helper(i:int) -> float:
+        
+        loss = 0
+        for label in range(n_classes):
+            tmp_x = np.append(classifier.X_training, [X_pool[i,:]], axis = 0)
+            tmp_y = np.append(classifier.y_training, [str(label)], axis = 0)
+            tmp_model.fit(tmp_x, tmp_y)
+
+            probs = tmp_model.predict_proba(X_pool)
+            prob_entropy = sp.stats.entropy(probs.T)
+            loss += np.sum(prob_entropy) * X_u_prob[i,label]
+        
+        return loss
+    
+    expected_risk = proc_pool.map(inner_pool_helper,range(len(X_pool)))
+    proc_pool.close()
+    proc_pool.join()
+
+
+    if n == 1:
+        idx = np.argmin(expected_risk)
+        return idx, X_pool[idx]
+    else:
+        idx = np.argsort(expected_risk)[:n]
+        return idx. X_pool[idx]
+
+
+=======
 from tqdm import tqdm
+>>>>>>> main
 
 
 def uncertainty_sampling(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1) -> tuple[np.ndarray, np.ndarray]:
@@ -151,6 +202,7 @@ if __name__ == '__main__':
     dataset = Dataset()
     dataset.plot('data.png')
 
+    pipeline(dataset, SVC(probability=True), minimize_expected_risk, 'min_exp_risk', 10, 90, 1, 2)
     pipeline(dataset, SVC(probability=True), diversity_sampling, 'diversity', 10, 90, 5, 2)
     pipeline(dataset, SVC(probability=True), random_sampling, 'passive', 10, 90, 1, 2)
     pipeline(dataset, SVC(probability=True), uncertainty_sampling, 'uncertainty', 10, 90, 1, 2)
