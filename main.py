@@ -151,8 +151,8 @@ def pipeline(dataset: Dataset, model: BaseEstimator, query: Callable, label: str
     acc = []
     train_x, test_x, train_y, test_y = dataset.get()
     for _ in range(n):
-        train_x, train_y = shuffle(train_x[:,:2], train_y)
-        accuracy = learning(train_x, train_y, test_x[:,:2], test_y, model, query, base, samples, batch)
+        train_x, train_y = shuffle(train_x, train_y)
+        accuracy = learning(train_x, train_y, test_x, test_y, model, query, base, samples, batch)
         acc.append(accuracy)
     acc = np.array(acc)
     plot(acc, label, base, batch)
@@ -163,8 +163,8 @@ if __name__ == '__main__':
     dataset.plot('data.png')
 
     pipeline(dataset, SVC(probability=True), minimize_expected_risk, 'min_exp_risk', 10, 90, 1, 2)
-    # pipeline(dataset, SVC(probability=True), random_sampling, 'passive', 10, 90, 1, 2)
-    # pipeline(dataset, SVC(probability=True), uncertainty_sampling, 'uncertainty', 10, 90, 1, 2)
+    pipeline(dataset, SVC(probability=True), random_sampling, 'passive', 10, 90, 1, 2)
+    pipeline(dataset, SVC(probability=True), uncertainty_sampling, 'uncertainty', 10, 90, 1, 2)
 
     plt.savefig('result.png')
     plt.close()
