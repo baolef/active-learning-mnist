@@ -1,6 +1,10 @@
 # Created by Baole Fang at 2/15/23
 
 from typing import Callable
+
+from modAL.density import information_density
+from sklearn.metrics import pairwise_distances
+
 from data import Dataset
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,12 +13,11 @@ from sklearn.cluster import KMeans
 from sklearn.utils import shuffle
 from modAL.models import ActiveLearner
 from modAL.models.base import BaseEstimator
-import os
 import multiprocess as mp
 from copy import deepcopy
 import scipy as sp
-import timeit
 from tqdm import tqdm
+
 
 def minimize_expected_risk(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1) -> tuple[np.ndarray, np.ndarray]:
     """
@@ -31,24 +34,23 @@ def minimize_expected_risk(classifier: ActiveLearner, X_pool: np.ndarray, n: int
     X_u_prob = base_model.predict_proba(X_pool)
     tmp_model = deepcopy(classifier.estimator)
 
-    def inner_pool_helper(i:int) -> float:
-        
+    def inner_pool_helper(i: int) -> float:
+
         loss = 0
         for label in range(n_classes):
-            tmp_x = np.append(classifier.X_training, [X_pool[i,:]], axis = 0)
-            tmp_y = np.append(classifier.y_training, [str(label)], axis = 0)
+            tmp_x = np.append(classifier.X_training, [X_pool[i, :]], axis=0)
+            tmp_y = np.append(classifier.y_training, [str(label)], axis=0)
             tmp_model.fit(tmp_x, tmp_y)
 
             probs = tmp_model.predict_proba(X_pool)
             prob_entropy = sp.stats.entropy(probs.T)
-            loss += np.sum(prob_entropy) * X_u_prob[i,label]
-        
+            loss += np.sum(prob_entropy) * X_u_prob[i, label]
+
         return loss
-    
-    expected_risk = proc_pool.map(inner_pool_helper,range(len(X_pool)))
+
+    expected_risk = proc_pool.map(inner_pool_helper, range(len(X_pool)))
     proc_pool.close()
     proc_pool.join()
-
 
     if n == 1:
         idx = np.argmin(expected_risk)
@@ -73,7 +75,9 @@ def uncertainty_sampling(classifier: ActiveLearner, X_pool: np.ndarray, n: int =
     idx = np.argsort(uncertainty)[-n:]
     return idx, X_pool[idx]
 
-def density_sampling(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1, beta: float = 1.0) -> tuple[np.ndarray, np.ndarray]:
+
+def density_sampling(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1, beta: float = 1.0) -> tuple[
+    np.ndarray, np.ndarray]:
     """
     Samples n samples with the largest product of uncertainty-based utility and average similarity to other samples in X_pool, returning their indices and values.
     :param classifier: The classifier for which the labels are to be queried.
@@ -83,14 +87,11 @@ def density_sampling(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1, 
     :return: n indices from samples maximizing the density-based metric and the n samples.
     """
     uncertainty = 1 - np.max(classifier.predict_proba(X_pool), axis=1)
-    num_points = len(X_pool)
-    avg_similarity = np.zeros(num_points)
-    for i in range(num_points):
-        dists = np.linalg.norm(np.delete(X_pool, i, 0) - X_pool[i], axis=1) # list of Euclidean distances between i-th sample and all others in pool
-        avg_similarity[i] = np.mean(1.0 / (1.0 + dists)) # 1 / (1 + d) converts distance measure to similarity measure with maximum of 1
-    idx = np.argsort(uncertainty * (avg_similarity ** beta))[-n:]
+    sim = 1 / (1 + pairwise_distances(X_pool, X_pool, metric='euclidean')).mean(axis=1)
+    prob = uncertainty * sim
+    idx = np.argsort(prob)[-n:]
     return idx, X_pool[idx]
-    
+
 
 def random_sampling(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1) -> tuple[np.ndarray, np.ndarray]:
     """
@@ -103,17 +104,18 @@ def random_sampling(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1) -
     query_idx = np.random.choice(range(len(X_pool)), n, False)
     return query_idx, X_pool[query_idx]
 
+
 def diversity_sampling(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1):
     if X_pool.shape[0] > n:
         cluster = KMeans(n_clusters=n, random_state=0, n_init="auto")
         labels = cluster.fit_predict(X_pool)
-        idx_pool = np.empty(n,dtype=int)
+        idx_pool = np.empty(n, dtype=int)
 
         for k in range(n):
-            pool = np.argwhere(labels==k).reshape(-1)
-            
+            pool = np.argwhere(labels == k).reshape(-1)
+
             idx_pool[k] = np.random.choice(pool, size=1, replace=False)
-        
+
     else:
         idx_pool = np.array(range(X_pool.shape[0]))
 
@@ -188,11 +190,12 @@ def pipeline(dataset: Dataset, model: BaseEstimator, query: Callable, label: str
     acc = []
     train_x, test_x, train_y, test_y = dataset.get()
     for i in range(n):
-        print('{}: round {}'.format(label,i+1))
+        print('{}: round {}'.format(label, i + 1))
         train_x, train_y = shuffle(train_x, train_y)
         accuracy = learning(train_x, train_y, test_x, test_y, model, query, base, samples, batch)
         acc.append(accuracy)
     acc = np.array(acc)
+    np.save('save/{}-{}-{}-{}.npy'.format(label, base, samples, batch), acc)
     plot(acc, label, base, batch)
 
 
@@ -200,10 +203,11 @@ if __name__ == '__main__':
     dataset = Dataset()
     dataset.plot('data.png')
 
-    pipeline(dataset, SVC(probability=True), minimize_expected_risk, 'min_exp_risk', 10, 90, 1, 2)
-    pipeline(dataset, SVC(probability=True), diversity_sampling, 'diversity', 10, 90, 5, 2)
-    pipeline(dataset, SVC(probability=True), random_sampling, 'passive', 10, 90, 1, 2)
-    pipeline(dataset, SVC(probability=True), uncertainty_sampling, 'uncertainty', 10, 90, 1, 2)
+    pipeline(dataset, SVC(probability=True), random_sampling, 'passive', 100, 900, 10, 2)
+    pipeline(dataset, SVC(probability=True), uncertainty_sampling, 'uncertainty', 100, 900, 10, 2)
+    pipeline(dataset, SVC(probability=True), diversity_sampling, 'diversity', 100, 900, 10, 2)
+    pipeline(dataset, SVC(probability=True), density_sampling, 'density', 100, 900, 10, 2)
+    # pipeline(dataset, SVC(probability=True), minimize_expected_risk, 'min_exp_risk', 100, 900, 10, 2)
 
     plt.savefig('result.png')
     plt.close()

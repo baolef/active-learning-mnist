@@ -9,10 +9,12 @@ import numpy as np
 
 
 class Dataset:
-    def __init__(self, train_ratio: float = 0.8, scale: bool = True, n_features: int = 0, feature_extraction=PCA):
+    def __init__(self, train_size: int = 5000, test_size: int = 10000, scale: bool = True, n_features: int = 0,
+                 feature_extraction=PCA):
         '''
         Dataset initialization.
-        :param train_ratio: The ratio of training set.
+        :param train_size: The size of the training set.
+        :param test_size: The size of the test set.
         :param scale: Whether to rescale the data.
         :param n_features: The number of features.
         :param feature_extraction: The feature extraction method, eg. PCA, TSNE.
@@ -32,9 +34,8 @@ class Dataset:
             self.model = feature_extraction(2)
             self.visual_flag = True
 
-        train_size = int(train_ratio * len(X))
         self.train_x, self.test_x, self.train_y, self.test_y = train_test_split(
-            X, y, train_size=train_size, test_size=len(X) - train_size, random_state=2023
+            X, y, train_size=train_size, test_size=test_size, random_state=2023
         )
 
     def get(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
