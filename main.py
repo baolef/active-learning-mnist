@@ -17,6 +17,35 @@ import multiprocess as mp
 from copy import deepcopy
 import scipy as sp
 from tqdm import tqdm
+import timeit
+
+
+def batch_sampling(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1,**kwargs) -> tuple[np.ndarray, np.ndarray]:
+
+    
+    X_train = deepcopy(classifier.X_training)
+    y_train = deepcopy(classifier.y_training)
+    X_pool_cp = deepcopy(X_pool)
+    y_pool_cp = deepcopy(kwargs['y_pool'])
+
+    chosen_x = np.empty((0,X_pool_cp.shape[1]),float)
+    chosen_y = np.array([])
+    chosen_idx = np.array()
+
+    for _ in range(n):
+
+        for i in range():
+            pass
+
+
+    
+
+
+
+
+
+
+
 
 
 def minimize_expected_risk(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1) -> tuple[np.ndarray, np.ndarray]:
@@ -31,21 +60,26 @@ def minimize_expected_risk(classifier: ActiveLearner, X_pool: np.ndarray, n: int
 
     base_model = classifier.estimator
     n_classes = len(np.unique(classifier.y_training))
+    # print(len(classifier.y_training))
+    # input()
     X_u_prob = base_model.predict_proba(X_pool)
+    X_pool_cp = deepcopy(X_pool)
     tmp_model = deepcopy(classifier.estimator)
 
-    def inner_pool_helper(i: int) -> float:
 
+    def inner_pool_helper(i: int) -> float:
+        
         loss = 0
         for label in range(n_classes):
-            tmp_x = np.append(classifier.X_training, [X_pool[i, :]], axis=0)
+            # start = timeit.default_timer()
+            tmp_x = np.append(classifier.X_training, [X_pool_cp[i, :]], axis=0)
             tmp_y = np.append(classifier.y_training, [str(label)], axis=0)
             tmp_model.fit(tmp_x, tmp_y)
 
-            probs = tmp_model.predict_proba(X_pool)
+            probs = tmp_model.predict_proba(X_pool_cp)
             prob_entropy = sp.stats.entropy(probs.T)
             loss += np.sum(prob_entropy) * X_u_prob[i, label]
-
+            # print(timeit.default_timer() - start)
         return loss
 
     expected_risk = proc_pool.map(inner_pool_helper, range(len(X_pool)))
@@ -57,7 +91,7 @@ def minimize_expected_risk(classifier: ActiveLearner, X_pool: np.ndarray, n: int
         return idx, X_pool[idx]
     else:
         idx = np.argsort(expected_risk)[:n]
-        return idx.X_pool[idx]
+        return idx, X_pool[idx]
 
 
 def uncertainty_sampling(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1) -> tuple[np.ndarray, np.ndarray]:
@@ -189,7 +223,7 @@ def pipeline(dataset: Dataset, model: BaseEstimator, query: Callable, label: str
     for i in range(n):
         print('{}: round {}'.format(label, i + 1))
         train_x, train_y = shuffle(train_x, train_y)
-        accuracy = learning(train_x, train_y, test_x, test_y, model, query, base, samples, batch)
+        accuracy = learning(train_x[:,:10], train_y, test_x[:,:10], test_y, model, query, base, samples, batch)
         acc.append(accuracy)
     acc = np.array(acc)
     np.save('save/{}-{}-{}-{}.npy'.format(label, base, samples, batch), acc)
@@ -200,11 +234,11 @@ if __name__ == '__main__':
     dataset = Dataset()
     dataset.plot('data.png')
 
-    pipeline(dataset, SVC(probability=True), random_sampling, 'passive', 100, 900, 10, 2)
-    pipeline(dataset, SVC(probability=True), uncertainty_sampling, 'uncertainty', 100, 900, 10, 2)
-    pipeline(dataset, SVC(probability=True), diversity_sampling, 'diversity', 100, 900, 10, 2)
-    pipeline(dataset, SVC(probability=True), density_sampling, 'density', 100, 900, 10, 2)
-    # pipeline(dataset, SVC(probability=True), minimize_expected_risk, 'min_exp_risk', 100, 900, 10, 2)
+    # pipeline(dataset, SVC(probability=True), random_sampling, 'passive', 100, 900, 10, 2)
+    # pipeline(dataset, SVC(probability=True), uncertainty_sampling, 'uncertainty', 100, 900, 10, 2)
+    # pipeline(dataset, SVC(probability=True), diversity_sampling, 'diversity', 100, 900, 10, 2)
+    # pipeline(dataset, SVC(probability=True), density_sampling, 'density', 100, 900, 10, 2)
+    pipeline(dataset, SVC(probability=True), minimize_expected_risk, 'min_exp_risk', 100, 900, 150, 2)
 
     plt.savefig('result.png')
     plt.close()
