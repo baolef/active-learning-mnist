@@ -3,7 +3,6 @@
 import matplotlib.pyplot as plt
 from sklearn.svm import SVC
 import data
-import numpy as np
 
 
 class SVM:
@@ -30,7 +29,7 @@ class SVM:
         model.fit(self.X_train, self.y_train)
         return model
 
-
+    
     def predict(self):
         """
         make predictions on the test set
@@ -60,7 +59,7 @@ class SVM:
 
         plt.savefig("SVM_y")
         plt.show()
-
+        
 
     def visualize_prediction(self):
         """
@@ -81,32 +80,8 @@ class SVM:
 
 if __name__ == '__main__':
     dataset = data.Dataset()
-    X_train, X_test, y_train, y_test = dataset.get()
+    X_test, y_test = dataset.get_test()
+    X_train, y_train = dataset.get_train()
 
-    C = [0.1,1,10,100,1000,10000]
-    Kernel = ['linear', 'poly', 'rbf', 'sigmoid']
-    Degree = [1, 3, 5, 10]
-
-    results = np.zeros((len(C),len(Kernel),len(Degree)))
-    for x,c in enumerate(C):
-        for y,k in enumerate(Kernel):
-            if k == 'poly':
-                for z, d in enumerate(Degree):
-                    print(c,k,d)
-                    classifier = SVC(C=c, kernel=k, degree=d)
-                    classifier.fit(X_train, y_train)
-                    score = classifier.score(X_test, y_test)
-                    results[x,y,z]=score
-
-            else:
-                print(c,k)
-                classifier = SVC(C=c, kernel=k)
-                classifier.fit(X_train, y_train)
-                score = classifier.score(X_test, y_test)
-                results[x,y,0]=score
-
-    print(results)
-    x,y,z=np.unravel_index(np.argmax(results),results.shape)
-    print(C[x],Kernel[y],Degree[z])
-    np.save('result.npy', results)
-
+    classifier = SVM(X_train, X_test, y_train, y_test, 1, 'poly')
+    classifier.visualize_prediction()
