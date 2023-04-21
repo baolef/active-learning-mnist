@@ -2,7 +2,6 @@
 
 from typing import Callable
 
-from modAL.density import information_density
 from sklearn.metrics import pairwise_distances
 
 from data import Dataset
@@ -58,9 +57,6 @@ def minimize_expected_risk(classifier: ActiveLearner, X_pool: np.ndarray, n: int
     else:
         idx = np.argsort(expected_risk)[:n]
         return idx, X_pool[idx]
-
-
-
 
 
 def uncertainty_sampling(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1) -> tuple[np.ndarray, np.ndarray]:
@@ -203,11 +199,13 @@ if __name__ == '__main__':
     dataset = Dataset()
     dataset.plot('data.png')
 
-    pipeline(dataset, SVC(probability=True), random_sampling, 'passive', 100, 900, 10, 2)
-    pipeline(dataset, SVC(probability=True), uncertainty_sampling, 'uncertainty', 100, 900, 10, 2)
-    pipeline(dataset, SVC(probability=True), diversity_sampling, 'diversity', 100, 900, 10, 2)
-    pipeline(dataset, SVC(probability=True), density_sampling, 'density', 100, 900, 10, 2)
-    # pipeline(dataset, SVC(probability=True), minimize_expected_risk, 'min_exp_risk', 100, 900, 10, 2)
+    config = {'C': 100, 'kernel': 'poly', 'degree': 3, 'probability': True}
+
+    pipeline(dataset, SVC(**config), random_sampling, 'passive', 100, 900, 10, 3)
+    pipeline(dataset, SVC(**config), uncertainty_sampling, 'uncertainty', 100, 900, 10, 3)
+    pipeline(dataset, SVC(**config), diversity_sampling, 'diversity', 100, 900, 10, 3)
+    pipeline(dataset, SVC(**config), density_sampling, 'density', 100, 900, 10, 3)
+    # pipeline(dataset, SVC(**config), minimize_expected_risk, 'min_exp_risk', 100, 900, 10, 3)
 
     plt.savefig('result.png')
     plt.close()
