@@ -57,7 +57,10 @@ def minimize_expected_risk(classifier: ActiveLearner, X_pool: np.ndarray, n: int
         return idx, X_pool[idx]
     else:
         idx = np.argsort(expected_risk)[:n]
-        return idx.X_pool[idx]
+        return idx, X_pool[idx]
+
+
+
 
 
 def uncertainty_sampling(classifier: ActiveLearner, X_pool: np.ndarray, n: int = 1) -> tuple[np.ndarray, np.ndarray]:
