@@ -108,5 +108,5 @@ if __name__ == '__main__':
     print(results)
     x,y,z=np.unravel_index(np.argmax(results),results.shape)
     print(C[x],Kernel[y],Degree[z])
-    np.save('result.npy', results)
+    np.save('svm.npy', results)
 
