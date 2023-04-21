@@ -107,6 +107,7 @@ if __name__ == '__main__':
 
     print(results)
     x,y,z=np.unravel_index(np.argmax(results),results.shape)
+    # C=100, kernel='poly', degree=3
     print(C[x],Kernel[y],Degree[z])
     np.save('svm.npy', results)
 
