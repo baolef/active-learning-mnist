@@ -79,6 +79,7 @@ class SVM:
         plt.show()
 
 
+
 if __name__ == '__main__':
     dataset = data.Dataset()
     X_train, X_test, y_train, y_test = dataset.get()
