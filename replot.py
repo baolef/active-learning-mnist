@@ -16,10 +16,11 @@ def replot(path,start,end):
 
 
 if __name__ == '__main__':
-    root='save/opt'
-    start=60
-    end=80
+    root='save/default'
+    start=0
+    end=100
     replot(root,start,end)
+    plt.title('default svm')
     plt.tight_layout()
-    plt.savefig('result_opt_{}_{}.png'.format(start,end))
+    plt.savefig('result_default_{}_{}.png'.format(start,end))
     plt.close()
