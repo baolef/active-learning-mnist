@@ -1,5 +1,5 @@
 # Created by Baole Fang at 2/15/23
-
+import os
 from typing import Callable
 
 from sklearn.metrics import pairwise_distances
@@ -168,13 +168,14 @@ def plot(accuracy: np.ndarray, label: str, base: int = 0, batch: int = 3) -> Non
     plt.legend()
 
 
-def pipeline(dataset: Dataset, model: BaseEstimator, query: Callable, label: str, base: int = 100, samples: int = 900,
+def pipeline(dataset: Dataset, model: BaseEstimator, query: Callable, name: str, label: str, base: int = 100, samples: int = 900,
              batch: int = 1, n: int = 1) -> None:
     """
     Train model in active learning with query strategy given dataset Output the accuracy to filename.
     :param dataset: Dataset.
     :param model: Base model in sklearn.
     :param query: Query strategy.
+    :param name: Model config name.
     :param label: Method label.
     :param base: The number of base training points.
     :param samples: The number of training points to be sampled.
@@ -187,25 +188,29 @@ def pipeline(dataset: Dataset, model: BaseEstimator, query: Callable, label: str
     train_x, test_x, train_y, test_y = dataset.get()
     for i in range(n):
         print('{}: round {}'.format(label, i + 1))
-        train_x, train_y = shuffle(train_x, train_y)
+        train_x, train_y = shuffle(train_x, train_y, random_state=2023+i)
         accuracy = learning(train_x, train_y, test_x, test_y, model, query, base, samples, batch)
         acc.append(accuracy)
     acc = np.array(acc)
-    np.save('save/{}-{}-{}-{}.npy'.format(label, base, samples, batch), acc)
+    np.save('save/{}/{}-{}-{}-{}.npy'.format(name,label, base, samples, batch), acc)
     plot(acc, label, base, batch)
 
 
 if __name__ == '__main__':
     dataset = Dataset()
-    dataset.plot('data.png')
 
-    config = {'C': 100, 'kernel': 'poly', 'degree': 3, 'probability': True}
+    # config = {'C': 100, 'kernel': 'poly', 'degree': 3, 'probability': True}
+    config = {'probability': True}
+    config_name='default'
 
-    pipeline(dataset, SVC(**config), random_sampling, 'passive', 100, 900, 10, 3)
-    pipeline(dataset, SVC(**config), uncertainty_sampling, 'uncertainty', 100, 900, 10, 3)
-    pipeline(dataset, SVC(**config), diversity_sampling, 'diversity', 100, 900, 10, 3)
-    pipeline(dataset, SVC(**config), density_sampling, 'density', 100, 900, 10, 3)
+    if not os.path.exists(os.path.join('save',config_name)):
+        os.makedirs(os.path.join('save',config_name))
+
+    pipeline(dataset, SVC(**config), random_sampling, config_name, 'passive', 100, 900, 10, 3)
+    pipeline(dataset, SVC(**config), uncertainty_sampling, config_name, 'uncertainty', 100, 900, 10, 3)
+    pipeline(dataset, SVC(**config), diversity_sampling, config_name, 'diversity', 100, 900, 10, 3)
+    pipeline(dataset, SVC(**config), density_sampling, config_name, 'density', 100, 900, 10, 3)
     # pipeline(dataset, SVC(**config), minimize_expected_risk, 'min_exp_risk', 100, 900, 10, 3)
-
-    plt.savefig('result.png')
+    plt.tight_layout()
+    plt.savefig('result_{}.png'.format(config_name))
     plt.close()
