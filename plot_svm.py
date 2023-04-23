@@ -18,14 +18,14 @@ C = [0.1,1,10,100,1000,10000]
 Kernel = ['linear', 'poly', 'rbf', 'sigmoid']
 Degree = [1, 3, 5, 10]
 
-fig, ax = plt.subplots(figsize=(12, 9))
-sns.heatmap(C_kernel, annot=True, ax=ax, linewidths=0.6, cbar=False, xticklabels=Kernel, yticklabels=C)
-plt.title('Parameter Search for C and kernel')
-plt.xlabel('Kernel')
-plt.ylabel('C')
-plt.savefig('kernel.png')
 
-sns.heatmap(C_poly, annot=True, ax=ax, linewidths=0.6, cbar=False, xticklabels=Degree, yticklabels=C)
+# sns.heatmap(C_kernel, annot=True, linewidths=0.6, xticklabels=Kernel, yticklabels=C, fmt='.3g')
+# plt.title('Parameter Search for C and kernel')
+# plt.xlabel('Kernel')
+# plt.ylabel('C')
+# plt.savefig('kernel.png')
+
+sns.heatmap(C_poly, annot=True, linewidths=0.6, xticklabels=Degree, yticklabels=C, fmt='.3g')
 plt.title('Parameter Search for poly')
 plt.xlabel('Degree')
 plt.ylabel('C')
