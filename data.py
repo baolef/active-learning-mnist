@@ -4,6 +4,7 @@ from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -45,7 +46,7 @@ class Dataset:
         '''
         return self.train_x, self.test_x, self.train_y, self.test_y
 
-    def plot(self, filename, y=None) -> None:
+    def plot(self, filename: str, y:np.ndarray=None) -> None:
         '''
         Plot the dataset.
         :param filename: The filename of the figure.
@@ -61,5 +62,36 @@ class Dataset:
         if self.visual_flag:
             x = self.model.fit_transform(x)
         plt.scatter(x[:, 0], x[:, 1], s=1, c=y.astype('int'))
+        plt.title(filename.rstrip('.png'))
+        plt.tight_layout()
         plt.savefig(filename)
         plt.close()
+
+    def kmeans(self, filename: str, n: int=10) -> None:
+        '''
+        Plot kmeans clustering result of the dataset.
+        :param filename: The filename of the figure.
+        :param n: The number of clusters.
+        :return: None.
+        '''
+        x = self.test_x
+        if self.visual_flag:
+            x = self.model.fit_transform(x)
+        if self.visual_flag:
+            x = self.model.fit_transform(x)
+        cluster = KMeans(n_clusters=n, random_state=0, n_init="auto")
+        labels = cluster.fit_predict(self.test_x)
+        u_labels = np.unique(labels)
+        for i in u_labels:
+            plt.scatter(x[labels == i, 0], x[labels == i, 1], label=i, s=1)
+        plt.title(filename.rstrip('.png'))
+        plt.tight_layout()
+        plt.savefig(filename)
+        plt.close()
+
+
+if __name__ == '__main__':
+    dataset = Dataset()
+    dataset.plot('classes.png')
+    dataset.kmeans('kmeans.png')
+
