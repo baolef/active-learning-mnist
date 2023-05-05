@@ -103,5 +103,5 @@ if __name__ == '__main__':
     if not os.path.exists(os.path.join('boundary', config_name, method)):
         os.makedirs(os.path.join('boundary', config_name, method))
 
-    pipeline(dataset, SVC(**config), density_sampling, config_name, 'density', 100, 900, 10, 1)
-    # pipeline(dataset, SVC(**config), uncertainty_sampling, config_name, method, 100, 900, 10, 1)
+    # pipeline(dataset, SVC(**config), density_sampling, config_name, 'density', 100, 900, 10, 1)
+    pipeline(dataset, SVC(**config), uncertainty_sampling, config_name, method, 100, 900, 10, 1)
