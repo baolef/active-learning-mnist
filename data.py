@@ -48,6 +48,25 @@ class Dataset:
         '''
         return self.train_x, self.test_x, self.train_y, self.test_y
 
+    def histogram(self):
+        '''
+        Plot the histogram of the training and test set.
+        :return: None
+        '''
+        plt.hist(self.train_y.astype(int), edgecolor='black')
+        plt.title('training set')
+        plt.xticks(np.arange(10))
+        plt.tight_layout()
+        plt.savefig('train.png')
+        plt.close()
+
+        plt.hist(self.test_y.astype(int), edgecolor='black')
+        plt.title('test set')
+        plt.xticks(np.arange(10))
+        plt.tight_layout()
+        plt.savefig('test.png')
+        plt.close()
+
     def plot(self, filename: str, y: np.ndarray = None) -> None:
         '''
         Plot the dataset.
@@ -109,6 +128,10 @@ class Dataset:
         z = np.array(z.reshape(xx.shape), dtype=int)
         plt.contourf(xx, yy, z)
         plt.scatter(x[:, 0], x[:, 1], s=1, c=self.test_y.astype(int))
+        dirs = filename.split('/')
+        plt.title('{} svm with {} sampling at {} samples'.format(dirs[-3], dirs[-2], dirs[-1].rstrip('.png')))
+        plt.axis('off')
+        plt.tight_layout()
         plt.savefig(filename)
         plt.close()
 
@@ -137,6 +160,7 @@ class Dataset:
 
 if __name__ == '__main__':
     dataset = Dataset()
+    dataset.histogram()
     dataset.digits()
     dataset.plot('classes.png')
     dataset.kmeans('kmeans.png')
