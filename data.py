@@ -1,4 +1,5 @@
 # Created by Baole Fang at 3/23/23
+import os
 
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
@@ -69,6 +70,25 @@ class Dataset:
         plt.savefig(filename)
         plt.close()
 
+    def digits(self) -> None:
+        '''
+        Plot the dataset.
+        :param filename: The filename of the figure.
+        :param y: The predicted y. If passed, then a true/false figure will be plotted indicating whether a test sample
+        is predicted correctly. If not passed, then the original dataset will be plotted.
+        :return: None.
+        '''
+        for i in range(10):
+            filename = '{}.png'.format(i)
+            x = self.test_x
+            if self.visual_flag:
+                x = self.model.fit_transform(x)
+            plt.scatter(x[self.test_y != str(i), 0], x[self.test_y != str(i), 1], s=1, c='c')
+            plt.scatter(x[self.test_y == str(i), 0], x[self.test_y == str(i), 1], s=1, c='b')
+            plt.tight_layout()
+            plt.savefig(os.path.join('digits', filename))
+            plt.close()
+
     def boundary(self, model: ActiveLearner, filename: str) -> None:
         '''
         Plot the decision boundary of the model.
@@ -117,5 +137,6 @@ class Dataset:
 
 if __name__ == '__main__':
     dataset = Dataset()
+    dataset.digits()
     dataset.plot('classes.png')
     dataset.kmeans('kmeans.png')
