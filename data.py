@@ -7,6 +7,7 @@ from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import numpy as np
+from modAL.models import ActiveLearner
 
 
 class Dataset:
@@ -46,7 +47,7 @@ class Dataset:
         '''
         return self.train_x, self.test_x, self.train_y, self.test_y
 
-    def plot(self, filename: str, y:np.ndarray=None) -> None:
+    def plot(self, filename: str, y: np.ndarray = None) -> None:
         '''
         Plot the dataset.
         :param filename: The filename of the figure.
@@ -54,20 +55,44 @@ class Dataset:
         is predicted correctly. If not passed, then the original dataset will be plotted.
         :return: None.
         '''
-        if y:
-            y = y == self.test_y
-        else:
-            y = self.test_y
         x = self.test_x
         if self.visual_flag:
             x = self.model.fit_transform(x)
-        plt.scatter(x[:, 0], x[:, 1], s=1, c=y.astype('int'))
+        if y is not None:
+            y = y == self.test_y
+            plt.scatter(x[y, 0], x[y, 1], s=1, c=self.test_y[y].astype('int'), marker='.')
+            plt.scatter(x[~y, 0], x[~y, 1], s=1, c=self.test_y[~y].astype('int'), marker='s')
+        else:
+            plt.scatter(x[:, 0], x[:, 1], s=1, c=self.test_y.astype('int'))
         plt.title(filename.rstrip('.png'))
         plt.tight_layout()
         plt.savefig(filename)
         plt.close()
 
-    def kmeans(self, filename: str, n: int=10) -> None:
+    def boundary(self, model: ActiveLearner, filename: str) -> None:
+        '''
+        Plot the decision boundary of the model.
+        :param model: The classification model.
+        :param filename: Output filename.
+        :return: None
+        '''
+        x = self.test_x
+        if self.visual_flag:
+            x = self.model.fit_transform(x)
+        x_min, x_max = x[:, 0].min() - 1, x[:, 0].max() + 1
+        y_min, y_max = x[:, 1].min() - 1, x[:, 1].max() + 1
+        h = (x_max - x_min) / 500
+        xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+        grid = np.c_[xx.ravel(), yy.ravel()]
+        grid = self.model.inverse_transform(grid)
+        z = model.predict(grid)
+        z = np.array(z.reshape(xx.shape), dtype=int)
+        plt.contourf(xx, yy, z)
+        plt.scatter(x[:, 0], x[:, 1], s=1, c=self.test_y.astype(int))
+        plt.savefig(filename)
+        plt.close()
+
+    def kmeans(self, filename: str, n: int = 10) -> None:
         '''
         Plot kmeans clustering result of the dataset.
         :param filename: The filename of the figure.
@@ -94,4 +119,3 @@ if __name__ == '__main__':
     dataset = Dataset()
     dataset.plot('classes.png')
     dataset.kmeans('kmeans.png')
-
