@@ -199,9 +199,9 @@ def pipeline(dataset: Dataset, model: BaseEstimator, query: Callable, name: str,
 if __name__ == '__main__':
     dataset = Dataset()
 
-    # config = {'C': 100, 'kernel': 'poly', 'degree': 3, 'probability': True}
-    config = {'probability': True}
-    config_name='default'
+    config = {'C': 100, 'kernel': 'poly', 'degree': 3, 'probability': True}
+    # config = {'probability': True}
+    config_name='opt'
 
     if not os.path.exists(os.path.join('save',config_name)):
         os.makedirs(os.path.join('save',config_name))
